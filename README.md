@@ -8,13 +8,30 @@
 
 1. [安装](#settingup)
    1. [安装 Pixi](#installingpixi)
+   
 2. [创建舞台（stage）和画布（renderer）](#application)
+
 3. [Pixi精灵](#sprite)
+
    1. [将图片加载到纹理缓存中](loadimage)
+
    2. [显示精灵](#showsprite)
-4. 
 
+   3. [使用别名 vs 按需导入](#aliases vs import)
 
+   4. [一些加载的小知识](#loadtips)
+
+      a. [监视加载进程](#progress)
+
+4. [精灵属性](#spriteattributes)
+
+   1. [位置](#position)
+   2. [大小和比例](#size_and_scale)
+   3. [旋转](#rotate)
+
+5. [从雪碧图中创建精灵](#tileset)
+   1. [创建雪碧图](#create_a_tileset)
+   2. [使用雪碧图](#use_the_tileset)
 
 
 
@@ -106,7 +123,7 @@ Pixi 精灵：一种特殊图像对象。你可以控制它们的位置、大小
 
 
 
-### 将图片加载到纹理缓存中
+### <a id="loadimage">将图片加载到纹理缓存中</a>
 
 首先，你需要将图片加载进来。Pixi 的 loader 对象可以加载任何你需要种类的图像资源。
 
@@ -176,7 +193,7 @@ function setup() {
 
 
 
-### 显示精灵
+### <a id="showsprite">显示精灵</a>
 
 创建完精灵以后，别忘了把它加到容器中去。如：
 
@@ -195,4 +212,281 @@ app.stage.removeChild(cat)
 ```typescript
 cat.visible = false
 ```
+
+
+
+### <a id="aliases vs import">使用别名 vs 按需导入</a>
+
+你可以对你使用频繁的Pixi对象和方法设置一些简略的可读性更强的别名。下面是一个给`TextureCache`对象创建别名的例子：
+
+```js
+let TextureCache = PIXI.utils.TextureCache
+```
+
+但在 vue 项目中（实际上在支持es6语法的项目中），我推荐你使用**按需导入**：
+
+```js
+import { utils } from 'pixi.js'
+
+utils.Texture ...
+```
+
+这样可以避免默认导入整个pixi，从而减少一些空间。
+
+如果你要默认导入，如下：
+
+```js
+import * as PIXI from 'pixi.js'
+```
+
+
+
+### <a id="loadtips">一些加载的小知识</a>
+
+#### <a id="progress">监视加载进程</a>
+
+Pixi的加载器有一个`progress`事件。你可以通过为该事件添加回调函数，在加载进程中做些什么事。
+
+你可以通过`loader`的`on`方法调用`progress`事件：
+
+```js
+PIXI.loader.on('progress', loadProgressHandler)
+```
+
+接下来你可以在回调函数`loadProgressHandler`中监视加载进程：
+
+- 该函数可以接收2个参数：loader和resource
+- 你可以用`resource.url`找到已经被加载的文件。用`loader.progress`找到加载进度（百分比）
+
+```js
+function loadProgressHandler(loader, resource) {
+	// 显示已被加载的文件 url
+	console.log('loading: '+ resource.url)
+	// 显示已被加载的百分比
+	console.log('progress' + loader.progress + '%')
+}
+```
+
+
+
+## <a id="spriteattributes">精灵属性</a>
+
+### <a id="position">位置</a>
+
+一开始，精灵们都被放置在其父容器的左上角，(0, 0)位置。你可以改变精灵的x, y的值来改变它的位置。
+
+还记得之前的猫咪精灵吗，我们用它来做实验：
+
+```
+cat.x = 96
+cat.y = 96
+```
+
+或者用一句话：
+
+```js
+cat.position.set(96, 96)
+```
+
+在创建完猫咪精灵后，把这两行代码放进`setup`方法
+
+```js
+import { Sprite, loader } from 'pixi.js'
+
+function setup() {
+	// 创建一个猫咪精灵
+	let cat = new Sprite(loader.resources['images/cat.png'].texture)
+	
+	// 改变它的位置
+	cat.x = 96
+	cat.y = 96
+	
+	// 把精灵添加到舞台上，让你能看见它
+	app.stage.addChild(cat)
+}
+```
+
+注意：
+
+1. 我按需导入了`Sprite`和`loader`。如果你选择默认导入，请写完整：`PIXI.Sprite`和`PIXI.loader.resources`
+
+2. x轴和y轴的正方向如下：
+
+![04](./screenshots/02.png)
+
+### <a id="size_and_scale">大小和比例</a>
+
+你可以通过精灵的`width`和`height`属性来改变它的大小。此时它的位置（左上角）是不会改变的。
+
+```js
+cat.width = 80
+cat.height = 120
+```
+
+效果：
+
+![06](./screenshots/03.png)
+
+当然你也可以设置精灵的`scale.x`和`scale.y`属性，成比例地改变它的宽高。
+
+以下代码将精灵的大小等比缩小成一半：
+
+```js
+cat.scale.x = 0.5
+cat.scale.y = 0.5
+```
+
+或者一句话：
+
+```js
+cat.scale.set(0.5, 0.5)
+```
+
+
+
+### <a id="rotate">旋转</a>
+
+你可以设置精灵的`rotation`来指定它**围绕锚点**顺时针旋转的角度：
+
+```js
+cat.rotation = 0.5
+```
+
+效果如下：
+
+![07](./screenshots/04.png)
+
+
+
+默认锚点在精灵的左上角，你可以设置`anchor.x`和`anchor.y`来改变锚点的位置：
+
+```js
+cat.anchor.x = 0.5
+cat.anchor.y = 0.5
+```
+
+`anchor.x`和`anchor.y`一般是从0到1，表示相对整个纹理的长度/宽度的比例。比如0.5就把`anchor`设置到了中心。
+
+注意：把`anchor`设置到中心，在旋转时会间接改变精灵的位置。如下：
+
+ ![08](./screenshots/05.png)
+
+
+
+`pivot`是和`anchor`差不多的属性，只不过它表示的是精灵的**原点**。（你还记得它默认在左上角(0, 0)位置吗）。
+
+```js
+cat.pivot.set(32, 32)
+```
+
+如果精灵图是 64x64像素大，以上这样设置时，它也会绕中心旋转。
+
+
+
+`anchor`表示精灵的锚点，一般值从0到1。
+
+`pivot`表示精灵的原点，一般值以像素为单位。
+
+
+
+## <a id="tileset">从雪碧图中创建精灵</a>
+
+### <a id="create_a_tileset">创建雪碧图</a>
+
+推荐一个好用的软件：[TexturePacker](https://www.codeandweb.com/texturepacker)
+
+下载以后，使用它的免费版。
+
+之后，你可以用它来将很多图片合成一个精灵表。
+
+
+
+你可以将你需要的图片拖到里面，它会自动合成一张雪碧图：
+
+![06](./screenshots/06.png)
+
+如果你想导出雪碧图，点击上方工具栏的发布精灵表，并把它保存到合适的地方。
+
+- 导出的文件有两个：.png和.json。.png是完整的雪碧图，而.json帮助记录每张子图在整图的位置和其他信息。
+- 如果你保存了原项目，它的后缀是.tps
+
+![](./screenshots/07.png)
+
+### <a id="use_the_tileset">使用雪碧图</a>
+
+这个时候，.json文件就有用处了。我们需要先导入.png和.json文件。以上面的treasure为例：
+
+```js
+import treasurePng from '../assets/resources/treasure.png'
+import treasureJson from '../assets/resources/treasure.json'
+```
+
+接下来，我们按之前的知识，加载图片到纹理缓存 TextureCache 中：
+
+```
+```
+
+接着，我们要根据纹理缓存中的图片资源和导入的json资源创建 Spritesheet：
+
+```js
+import { Spritesheet } from 'pixi.js'
+
+...
+const spritesheet = new Spritesheet(TextureCache[resources.treasure], treasureJson)
+```
+
+最后，解析spritesheet：
+
+```js
+spritesheet.parse(() => {
+  // 解析后，这里可以进行精灵的创建等
+  ...
+})
+```
+
+以上是在webpack下的解决方法。以上步骤解析了整个雪碧图的信息。
+
+
+
+接下来，如果你想从雪碧图中截取一张子图作为纹理，创建一个**静态**精灵，如下：
+
+```js
+import { Sprite } from 'pixi.js'
+
+...
+const door = new Sprite(spritesheet.textures['door.png'])
+```
+
+注意：调用 spritesheet 的`textures`属性，索引值是.json文件中子图的名称。（一般也是你创建雪碧图时拖入子图的名称）
+
+
+
+而如果你想要创建一个**动态**精灵。
+
+- 首先，你需要在创建雪碧图时，拖入一系列名称相近的图片——它们可以代表精灵的一个动作。如：
+
+  ```js
+  person-front-1.png person-front-2.png person-front-3.png // 用这3张图表示人物正面行走动作
+  ```
+
+- 接着，在导出.json文件后，它会自动将这些名字相近的图片加进`animations`字段的某一属性的数组中。这个属性名一般是这一系列图片相同的名字前缀。
+
+  ```json
+  "animations": {
+  	"front": ["person-front-1.png","person-front-2.png","person-front-3.png"]
+  }
+  ```
+
+  （当然，你也可以在.json文件中手动修改这一字段，相当于自定义这一属性的动画帧）
+
+- 接着，在代码中创建动态精灵：
+
+```js
+import { AnimatedSprite } from 'pixi.js'
+
+...
+const person = new AnimatedSprite(spritesheet.animations['front'])
+```
+
+注意：调用 spritesheet 的`animations`属性，索引值为.json文件中对应id。
 
