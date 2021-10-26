@@ -1,6 +1,18 @@
 declare module '*.vue' {
-  import { DefineComponent } from 'vue'
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/ban-types
-  const component: DefineComponent<{}, {}, any>
-  export default component
+  import Vue from 'vue'
+  export default Vue
 }
+declare module '*.png' { // 你可以自己添加一些模块定义
+  const a: string
+  export default a
+}
+declare module '*.jpg' {
+  const a: string
+  export default a
+}
+declare module '*.csv' {
+  const a: string[][]
+  export default a
+}
+
+declare module 'js-untar';

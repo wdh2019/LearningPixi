@@ -1,8 +1,8 @@
 # Pixi 教程
 
-根据 github 仓库 [kittykatattack/learningPixi](https://github.com/kittykatattack/learningPixi) 改编。专注于在 **Vue框架** 上实现该教程。
+根据 github 仓库 [kittykatattack/learningPixi](https://github.com/kittykatattack/learningPixi) 改编。专注于在 **Vue框架** 上实现该教程。并对其进行了精简。
 
-这个教程会一步步介绍如何用用 [Pixi](https://github.com/pixijs/pixi.js) 制作游戏或交互式媒体。该教程用的是（此时）的最新版本 **[Pixi v6.1.3](https://github.com/pixijs/pixijs/releases/tag/v6.1.3)**。
+这个教程会简单介绍如何使用 [Pixi](https://github.com/pixijs/pixi.js) 。该教程用的是（此时）的最新版本 **[Pixi v6.1.3](https://github.com/pixijs/pixijs/releases/tag/v6.1.3)**。
 
 ### 目录：
 
@@ -32,8 +32,10 @@
 5. [从雪碧图中创建精灵](#tileset)
    1. [创建雪碧图](#create_a_tileset)
    2. [使用雪碧图](#use_the_tileset)
+   
+6. [容器](#container)
 
-
+7. [结语](#ending)
 
 
 
@@ -41,22 +43,27 @@
 
 首先，要创建一个 Vue 项目。你可以用 [Vue-cli](https://cli.vuejs.org/zh/guide/) 或 [Vite](https://vitejs.cn/guide/) 来快速搭建一个 Vue 项目。本教程使用了 Vite 来构建项目。
 
-示例项目采用了 Vue3 + TypeScript。
+示例项目采用了 Vue2 + TypeScript。
 
-而在教程中，我会尽量先用 JavaScript 代码阐释概念，再说明在 Vue3 中要特别注意的地方。
+而在教程中，我会尽量先用 JavaScript 代码阐释概念，再说明在 Vue 中要特别注意的地方。
 
-使用 Vite 生成项目： 
+使用 Vue-cli 生成项目： 
 
 ```bash
-npm init @vitejs/app my-vue-app
+vue create my-vue-app
 ```
 
-选择vue，再选择vue
+如果你想添加 TypeScript，请选择人工配置。
+
+选择Vue.js 的版本时，选择2.x。
+
+其他一路按默认配置选择就可以了。
+
+等项目生成以后：
 
 ```bash
 cd my-vue-app
-npm install
-npm run dev
+npm run serve
 ```
 
 这样就跑起来了一个 Vue 项目了。
@@ -69,13 +76,13 @@ npm run dev
 npm install pixi.js --save
 ```
 
-等待其完成。
+
 
 
 
 ## <a id="application">创建Pixi应用和舞台</a>
 
-Pixi应用：它是pixi一切的基础。它会自动创建一个``<canvas>``HTML标签并计算出怎么让你的图片在其中显示。
+Pixi应用：它是 Pixi 一切的基础。它会自动创建一个``<canvas>``HTML标签并计算出怎么让你的图片在其中显示。
 
 舞台：PIXI.Application实例有一个`stage`属性。它是一个容器对象，也可以说是根容器。它“海纳百川”，最终所有的容器和精灵都会被添加到它身上。
 
@@ -188,6 +195,26 @@ PIXI.loader.add(catPng).load(setup)
 function setup() {
 	const texture = PIXI.utils.TextureCache[catPng]
     const cat = new Sprite(texture)
+}
+```
+
+如果你在 TypeScript 下，发现导入图片报错，请在shims-tsx.d.ts文件中声明 资源后缀对应的模块：
+
+```typescript
+// png
+declare module '*.png' {
+  const a: string
+  export default a
+}
+// jpg
+declare module '*.jpg' {
+  const a: string
+  export default a
+}
+// csv
+declare module '*.csv' {
+  const a: string[][]
+  export default a
 }
 ```
 
@@ -490,3 +517,93 @@ const person = new AnimatedSprite(spritesheet.animations['front'])
 
 注意：调用 spritesheet 的`animations`属性，索引值为.json文件中对应id。
 
+
+
+
+
+## <a id="container">容器</a>
+
+还记得 Pixi 应用的 `stage` 属性就是一个容器吗？
+
+Pixi 容器就像一个盒子。在编写 Pixi 代码时，你可以基于一个个容器来构建层级：
+
+- 父容器可以容纳子容器
+- 父容器可以容纳精灵
+
+你可以通过调用`addChild()`方法来容纳容器/精灵：
+
+```js
+import { Container } from 'pixi.js'
+
+const container = new Container()
+// 我们假设可爱的猫咪精灵已经在之前生成了
+container.addChild(cat)
+```
+
+你也可以将容器看作一个精灵，因为你也可以改变其位置和原点。
+
+```js
+// 改变一个容器相对于其父容器的位置
+container.x = 96
+container.y = 96
+// 改变其原点
+container.pivot.set(32, 32)
+```
+
+在工程化实践中，我们常常把自己的类继承自`PIXI.Container`，在调用`this.addChild()`将生成的精灵添加到自己的实例中。这是一种较好的实践思路。如：
+
+```typescript
+import { Container, Spritesheet, Sprite } from 'pixi.js'
+
+export class Cat extends Container { // 继承 PIXI.Container
+	private spritesheet: Spritesheet
+	constructor(spritesheet: Spritesheet) {
+		this.spritesheet = spritesheet
+    // 生成精灵
+    const cat = new Sprite(spritesheet.textures['cat.png'])
+    // 把精灵添加到类实例
+    this.addChild(cat)
+	}
+}
+```
+
+
+
+
+
+### <a id="practice">一些习惯</a>
+
+在构建 Vue + Pixi 的项目时，有一条推荐的思路：
+
+- 在一个 Vue 组件（不如叫它 `Display`）中持有一个 js / ts 类（不如叫它 `Application`）作为`Pixi.application`的入口。
+
+- 接下来，在`Application`类中，
+  - 用`Pixi.Loader`预先加载资源。
+  - 持有一个`Stage`类作为“最大“的容器，作为展示舞台（并把它添加到 根容器 `app.stage` 中）
+- 在`Stage`类中，构建 Pixi 的容器层级结构。（记得用自己的类继承`Pixi.Container`，以下称其为容器类）
+
+  **注意**：
+
+- 为了 ”**预先加载资源**“ 和 ”**构建展示舞台**“ 这2步分开，构建了`Application`类作为缓冲。如果你的容器层级不那么复杂，可以跳过构建这个类。
+
+![08](./screenshots/08.png)
+
+
+
+
+
+## <a id="ending">结语</a>
+
+其实说到这里，以上的知识已经可以支持你的平常开发了。
+
+如果你想要进一步了解 Pixi，请移步：
+
+1. 英文版教程 [kittykatattack/learningPixi](https://github.com/kittykatattack/learningPixi)
+2. 官网 [PixiJS](https://pixijs.com/)
+
+以下是一些有用的 Pixi 库：
+
+- pixi-viewport
+- pixi-live2d-display
+- pixi-particles
+- pixi-sound
