@@ -17,7 +17,7 @@
 
    2. [显示精灵](#showsprite)
 
-   3. [使用别名 vs 按需导入](#aliases vs import)
+   3. [使用别名 vs 按需导入](#aliases_vs_import)
 
    4. [一些加载的小知识](#loadtips)
 
@@ -242,7 +242,7 @@ cat.visible = false
 
 
 
-### <a id="aliases vs import">使用别名 vs 按需导入</a>
+### <a id="aliases_vs_import">使用别名 vs 按需导入</a>
 
 你可以对你使用频繁的Pixi对象和方法设置一些简略的可读性更强的别名。下面是一个给`TextureCache`对象创建别名的例子：
 
