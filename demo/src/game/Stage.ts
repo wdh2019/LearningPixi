@@ -1,7 +1,8 @@
-import { Container, Loader, Sprite, utils } from 'pixi.js'
-import { Application, IApplicationOptions } from 'pixi.js'
-
+import { Loader, utils, Application, IApplicationOptions, Spritesheet } from 'pixi.js'
 import resources from './resources'
+import treasureJson from '@/assets/resources/treasure.json'
+import { Cat } from './components/Cat'
+import { Person } from './components/Person'
 
 // 第一层，读取资源loadResources 和 初始化容器initStage
 export class Stage {
@@ -29,12 +30,17 @@ export class Stage {
     })
   }
   initStage() {
-    const cat = new Sprite(utils.TextureCache[resources.catPng])
-    cat.x = 96
-    cat.y = 96
-    cat.anchor.set(0.5, 0.5)
-    cat.rotation = Math.PI
+    const TextureCache = utils.TextureCache
+    // 直接用图片创建Sprite, 可爱的小猫咪
+    const cat = new Cat()
     this.app.stage.addChild(cat)
+    // 利用雪碧图创建Sprite，探险者
+    const personSpritesheet = new Spritesheet(TextureCache[resources.treasurePng], treasureJson)
+    personSpritesheet.parse(() => {
+      const person = new Person(personSpritesheet)
+      person.position.set(300, 300) // 容器也可视作精灵，改变其位置
+      this.app.stage.addChild(person)
+    })
   }
   // 调整窗口大小
   resize = (width: number, height: number) => {

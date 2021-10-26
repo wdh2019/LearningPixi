@@ -132,12 +132,12 @@ Pixi 精灵：一种特殊图像对象。你可以控制它们的位置、大小
 
 ### <a id="loadimage">将图片加载到纹理缓存中</a>
 
-首先，你需要将图片加载进来。Pixi 的 loader 对象可以加载任何你需要种类的图像资源。
+首先，你需要将图片加载进来。Pixi 的 Loader.shared 对象可以加载任何你需要种类的图像资源。
 
 例如，如果你有一个从``"./asstes/images/cat.png"``加载的图像，想把它加载进来：
 
 ```javascript
-PIXI.loader.add('./assets/images/cat.png').load(setup)
+PIXI.Loader.shared.add('./assets/images/cat.png').load(setup)
 
 function setup() {
 	...
@@ -147,7 +147,7 @@ function setup() {
 加载多个图片时，可以链式调用 add 方法：
 
 ```javascript
-PIXI.loader
+PIXI.Loader.shared
   .add('./assets/images/1.png')
   .add('./assets/images/2.png')
   .add('./assets/images/3.png')
@@ -156,7 +156,7 @@ PIXI.loader
 也可以给 add 方法传入一个数组：
 
 ```javascript
-PIXI.loader.add([
+PIXI.Loader.shared.add([
   './assets/images/1.png',
   './assets/images/2.png',
   './assets/images/3.png',
@@ -177,20 +177,22 @@ const texture = PIXI.utils.TextureCache['images/cat.png']
 const cat = new PIXI.Sprite(texture)
 ```
 
-另一种写法，连接 loader 的 resources 对象：
+另一种写法，连接 Loader.shared 的 resources 对象：
 
 ```javascript
 const cat = new PIXI.Sprite(
-  PIXI.loader.resources['./assets/images/cat.png']
+  PIXI.Loader.shared.resources['./assets/images/cat.png']
 )
 ```
 
-**注意**：在 Vue 项目中，因为使用 webpack 进行打包，所以用 es6 导入图片资源
+**注意**：
+
+1. 在 Vue 项目中，因为使用 webpack 进行打包，所以用 es6 导入图片资源
 
 ```typescript
 import catPng from './assets/images/cat.png'
 
-PIXI.loader.add(catPng).load(setup)
+PIXI.Loader.shared.add(catPng).load(setup)
 
 function setup() {
 	const texture = PIXI.utils.TextureCache[catPng]
@@ -198,7 +200,7 @@ function setup() {
 }
 ```
 
-如果你在 TypeScript 下，发现导入图片报错，请在shims-tsx.d.ts文件中声明 资源后缀对应的模块：
+2. 如果你在 TypeScript 下，发现导入图片报错，请在shims-tsx.d.ts文件中声明 资源后缀对应的模块：
 
 ```typescript
 // png
@@ -217,6 +219,14 @@ declare module '*.csv' {
   export default a
 }
 ```
+
+3. 如果你在 Typescript 下，发现导入json报错，请在 tsconfig.json文件中 compilerOptions 属性中添加规则：
+
+```ts
+"resolveJsonModule": true,
+```
+
+
 
 
 
@@ -274,10 +284,10 @@ import * as PIXI from 'pixi.js'
 
 Pixi的加载器有一个`progress`事件。你可以通过为该事件添加回调函数，在加载进程中做些什么事。
 
-你可以通过`loader`的`on`方法调用`progress`事件：
+你可以通过`Loader.shared`的`on`方法调用`progress`事件：
 
 ```js
-PIXI.loader.on('progress', loadProgressHandler)
+PIXI.Loader.shared.on('progress', loadProgressHandler)
 ```
 
 接下来你可以在回调函数`loadProgressHandler`中监视加载进程：
@@ -318,9 +328,10 @@ cat.position.set(96, 96)
 在创建完猫咪精灵后，把这两行代码放进`setup`方法
 
 ```js
-import { Sprite, loader } from 'pixi.js'
+import { Sprite, Loader } from 'pixi.js'
 
 function setup() {
+  const loader = Loader.shared
 	// 创建一个猫咪精灵
 	let cat = new Sprite(loader.resources['images/cat.png'].texture)
 	
@@ -335,7 +346,7 @@ function setup() {
 
 注意：
 
-1. 我按需导入了`Sprite`和`loader`。如果你选择默认导入，请写完整：`PIXI.Sprite`和`PIXI.loader.resources`
+1. 我按需导入了`Sprite`和`Loader`。如果你选择默认导入，请写完整：`PIXI.Sprite`和`PIXI.Loader.shared.resources`
 
 2. x轴和y轴的正方向如下：
 
@@ -416,6 +427,8 @@ cat.pivot.set(32, 32)
 
 
 
+
+
 ## <a id="tileset">从雪碧图中创建精灵</a>
 
 ### <a id="create_a_tileset">创建雪碧图</a>
@@ -450,7 +463,13 @@ import treasureJson from '../assets/resources/treasure.json'
 
 接下来，我们按之前的知识，加载图片到纹理缓存 TextureCache 中：
 
-```
+```js
+const loader = PIXI.Loader.shared
+loader.add(treasurePng).load(setup)
+
+function setup() {
+  ...
+}
 ```
 
 接着，我们要根据纹理缓存中的图片资源和导入的json资源创建 Spritesheet：
